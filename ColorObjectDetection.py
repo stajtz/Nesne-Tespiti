@@ -8,6 +8,13 @@ Created on Mon Jul 26 17:10:13 2021
 import cv2
 import numpy as np
 import time
+from collections import deque
+
+# nesne merkezini depolayacak veri tipi
+#kaç tane merkez noktası hatırlayacağı
+buffer_size = 16
+# pts bahsedilen meqrkezlerin noktalari  
+pts = deque(maxlen = buffer_size) 
 
 #Algılayacağı renklerin aralığı
 colorLower=(43,95,0)
@@ -50,6 +57,7 @@ def videos(video):
             
             #Maske görüntüsünde oluşan kenarlara göre kontur buluyor
             (contours,_)=cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+            center=None
             
             #eğer kontur varsa içine girilir
             if len(contours)>0:
@@ -58,13 +66,30 @@ def videos(video):
                 
                 #konturdan gelen görüntüyü oluşturabileceği en küçük dikdörtgeni özelliklerini rect değişkenine atıyor
                 rect=cv2.minAreaRect(c)
-    
+                
+                #Oluşan dikdörtgenin pozisyon ve boyut değerlerini ekrana yazdırmak için değişkenlere atıyoruz
+                ((x,y), (width,height), rotation) = rect
+                s = "x: {}, y: {}, width: {}, height: {}, rotation: {}".format(np.round(x),np.round(y),np.round(width),np.round(height),np.round(rotation))
+                cv2.putText(orginalFrame, s, (25,50), cv2.FONT_HERSHEY_COMPLEX_SMALL, 0.7, (255,255,255), 2)
+
                 #gelen değerler ile bir kutu şekli yapıyor
                 box=cv2.boxPoints(rect)    
-                box=np.int64(box)    
+                box=np.int64(box)  
                 
                 #oluşan konturları görüntüye çiziyor
                 cv2.drawContours(orginalFrame, [box], 0, (255,0,0),thickness=2)
+                
+                #Konturdaki orta noktayı buluyoruz ve bir nokta çiziyoruz
+                M = cv2.moments(c)
+                center = (int(M["m10"]/M["m00"]), int(M["m01"]/M["m00"]))
+                cv2.circle(orginalFrame, center, 5, (255,0,255),-1)
+            
+            #Orta noktaları arkasında bir çizgi şeklinde iz bırakması için bir deque atılıyor
+            pts.appendleft(center)    
+            for i in range(1, len(pts)):
+                #eğer bir önceki veya şuanki nokta yoksa birşey yapılmıyor
+                if pts[i-1] is None or pts[i] is None: continue
+                cv2.line(orginalFrame, pts[i-1], pts[i],(0,255,0),3) 
             
             #oluşan konturlu görüntüyü gösteriliyor
             cv2.imshow("Contour",orginalFrame)
