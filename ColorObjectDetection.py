@@ -12,13 +12,26 @@ from collections import deque
 
 # nesne merkezini depolayacak veri tipi
 #kaç tane merkez noktası hatırlayacağı
-buffer_size = 16
+buffer_size = 32
 # pts bahsedilen meqrkezlerin noktalari  
 pts = deque(maxlen = buffer_size) 
 
+def empty(a): pass
+
 #Algılayacağı renklerin aralığı
-colorLower=(43,95,0)
-colorUpper=(145,255,255)
+colorLower=(0,0,0)
+colorUpper=(0,0,0)
+
+#İstediğimiz renkleri algılaması trackbar koyuyoruz
+cv2.namedWindow("Sonuc")
+cv2.resizeWindow("Sonuc", 650, 350)
+cv2.createTrackbar("hueMax", "Sonuc", 0, 255, empty)
+cv2.createTrackbar("hueLow", "Sonuc", 0, 255, empty)
+cv2.createTrackbar("satMax", "Sonuc", 0, 255, empty)
+cv2.createTrackbar("satLow", "Sonuc", 0, 255, empty)
+cv2.createTrackbar("valueMax", "Sonuc", 0, 255, empty)
+cv2.createTrackbar("valueLow", "Sonuc", 0, 255, empty)
+
 
 #videolar arası geçiş yaparken kodları bir daha yapmasın diye fonksiyon içerisinde
 def videos(video):
@@ -29,6 +42,16 @@ def videos(video):
     
         #videonun çalışıp çalışmadığı ve gelen kareleri değişkene atılıyor
         success,orginalFrame=capture.read()
+        
+        #trackbar dan gelen değerleri değişkenlere atıyoruz
+        hueMax=cv2.getTrackbarPos("hueMax", "Sonuc")
+        hueLow=cv2.getTrackbarPos("hueLow", "Sonuc")
+        satMax=cv2.getTrackbarPos("satMax", "Sonuc")
+        satLow=cv2.getTrackbarPos("satLow", "Sonuc")
+        valMax=cv2.getTrackbarPos("valueMax", "Sonuc")
+        valLow=cv2.getTrackbarPos("valueLow", "Sonuc")
+        colorUpper=(hueMax,satMax,valMax)
+        colorLower=(hueLow,satLow,valLow)
         
         #eğer video oynuyorsa işlemleri yapıyor
         if success:
@@ -109,5 +132,5 @@ def videos(video):
         videos("penVideo.mp4")
     
     
-videos("penVideo.mp4")
+videos(0)
 
